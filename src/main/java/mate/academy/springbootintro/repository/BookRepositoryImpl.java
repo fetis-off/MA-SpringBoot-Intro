@@ -2,6 +2,7 @@ package mate.academy.springbootintro.repository;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import mate.academy.springbootintro.exception.DataProcessingException;
 import mate.academy.springbootintro.model.Book;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -27,7 +28,7 @@ public class BookRepositoryImpl implements BookRepository {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Cant insert book into DB: " + book, e);
+            throw new DataProcessingException("Cant insert book into DB: " + book, e);
         } finally {
             if (session != null) {
                 session.close();
@@ -38,17 +39,12 @@ public class BookRepositoryImpl implements BookRepository {
     @Override
     public List<Book> findAll() {
         List<Book> books;
-        Transaction transaction = null;
-        try (Session session = sessionFactory.openSession()) {
-            transaction = session.beginTransaction();
+        try {
+            Session session = sessionFactory.openSession();
             books = session.createQuery("from Book ").list();
-            transaction.commit();
             return books;
         } catch (Exception e) {
-            if (transaction != null) {
-                transaction.rollback();
-            }
-            throw new RuntimeException("Cant find all books", e);
+            throw new DataProcessingException("Cant find all books", e);
         }
     }
 }
